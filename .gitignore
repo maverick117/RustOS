@@ -3,3 +3,4 @@ doc
 **/*.iso
 **/*.bin
 **/.vscode
+Cargo.lock
