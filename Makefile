@@ -1,12 +1,24 @@
-.PHONY: all, clean
+LD=ld
 
-all:
-	cd src/arch; make
-	cp src/arch/boot.bin bin/isofiles/boot/boot.bin
-	grub-mkrescue -o iso/os.iso bin/isofiles -d /usr/lib/grub/i386-pc
+.PHONY: all, clean, arch_obj, kernel_obj, kernel_ld
+
+all: arch_obj kernel_obj kernel_ld
+	cd bin; make
 	qemu-system-x86_64 -cdrom iso/os.iso -m 64
 
+arch_obj: 
+	cd src/arch; make
+	cp src/arch/arch.o bin/
+	
+kernel_obj:
+	cd src/kernel; make
+	cp src/kernel/kernel.o bin/
+
+kernel_ld: src/image.ld
+	cp src/image.ld bin/
 
 clean:
 	cd src/arch; make clean
-	rm bin/isofiles/boot/boot.bin iso/os.iso
+	cd src/kernel; make clean
+	rm -rf bin/isofiles/boot/boot.bin iso/os.iso
+	rm -rf bin/*.o bin/image.ld

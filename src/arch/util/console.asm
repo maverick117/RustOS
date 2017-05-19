@@ -1,5 +1,6 @@
 global init_text_console
 global print_char
+global clear_console
 
 section .text
 bits 64
@@ -15,12 +16,12 @@ init_text_console:
     ; UNIX SYSV ABI calling convention
 
     mov qword rcx, 0x0
-    mov qword rbx, [console_test_msg_len]
+    mov qword rbx, console_test_msg_len - console_test_msg
 
 .loop:
     xor rax, rax
     mov byte al, [console_test_msg + rcx]
-    mov byte ah, 0x2f
+    mov byte ah, 0x0f
     mov qword rdi, rax
     call print_char
     inc rcx
@@ -130,4 +131,3 @@ current_position:
 console_test_msg:
     db "Text console test...", 0x0a, "If you see two lines of text, then the test is successful",0x0a
 console_test_msg_len:
-    dq console_test_msg_len - console_test_msg

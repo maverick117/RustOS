@@ -21,16 +21,9 @@ long_start:
   call setup_idt                  ; Setup IDT
   call init_text_console          ; Setup text console
 
- ; mov rax, 0x2f472f4e2f4f2f4c      ; Output 'LONG MODE OK'
- ; mov qword [0xb8000], rax
- ; mov rax, 0x2f442f4f2f4d2f20
- ; mov qword [0xb8008], rax
- ; mov rax, 0x2f4b2f4f2f202f45
- ; mov qword [0xb8010], rax
-
   mov qword rcx, 0x0
-  mov qword rbx, [assembly_success_msg_len]
-.loop
+  mov qword rbx, assembly_success_msg_len - assembly_success_msg
+.loop:
   xor rax, rax
   mov byte al, [assembly_success_msg + rcx]
   mov byte ah, 0x2f
@@ -40,12 +33,12 @@ long_start:
   cmp rcx, rbx
   jl .loop
 
-
+.call_rust:
   xor rax, rax
   xor rbx, rbx
   xor rcx, rcx
   xor rdx, rdx
-;  call rust_start                 ; Start Rust Kernel Section
+  jmp rust_start                 ; Start Rust Kernel Section
 
   hlt
 
@@ -53,4 +46,3 @@ long_start:
 assembly_success_msg:
   db 0x0a, "BOOT GOOD", 0x0a, 0x0a,"Assembly boot successful. Handing control to Rust code...", 0x0a
 assembly_success_msg_len:
-  dq assembly_success_msg_len - assembly_success_msg

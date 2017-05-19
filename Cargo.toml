@@ -1,0 +1,13 @@
+[package]
+name = "kernel"
+version = "0.1.0"
+authors = ["Andrew Jianzhong Liu <liujzh@shanghaitech.edu.cn>"]
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+
+
+[profile.release]
+panic = "abort"

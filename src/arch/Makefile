@@ -2,12 +2,12 @@ AS=nasm
 FMT=-f elf64
 LD=ld
 
-.PHONY: all, clean
+.PHONY: all, clean, arch_obj
 
-all: boot.bin
+all: arch_obj
+	${LD} -n -o arch.o -T boot.ld -r *.o
 
-boot.bin: header.o boot.o boot.ld long_boot.o console.o idt.o
-	ld -n -o boot.bin -T boot.ld header.o boot.o long_boot.o console.o idt.o
+arch_obj: header.o boot.o boot.ld long_boot.o console.o idt.o
 
 header.o: boot/mult_boot_hdr.asm
 	${AS} ${FMT} boot/mult_boot_hdr.asm -o header.o
