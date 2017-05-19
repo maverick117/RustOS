@@ -1,4 +1,5 @@
 	global start
+	global multiboot_loc
 	extern long_start
 
 	section .text
@@ -7,6 +8,7 @@ start:
   cli                             ; Clear interrupts
 	mov esp, stack_top              ; Move stack to top
 	call check_multiboot            ; Check for multiboot startup
+	mov dword [multiboot_loc], ebx        ; Move multiboot information location to mem
 	call check_cpuid                ; Check for CPUID restraints
 	call check_amd64                ; Check if supports long mode
 	call set_page_table             ; Prepare page table for long mode
@@ -14,7 +16,8 @@ start:
 	mov dword [0xb8000], 0x2f4b2f4f ; Green 'OK' to VGA screen buffer
 	lgdt [gdt64.pointer]
 	jmp gdt64.code:long_start       ; Long jump to switch to long mode
-	hlt				; Halt
+	mov al, 'K'
+	jmp error
 
 check_multiboot:
 	cmp eax, 0x36d76289             ; Check for magic value
@@ -114,3 +117,7 @@ gdt64:
 .pointer:
 	dw $ - gdt64 - 1
 	dq gdt64
+
+	section .data
+multiboot_loc:
+	dq 0x0

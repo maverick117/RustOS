@@ -2,3 +2,5 @@ doc
 */*.o
 */*.iso
 */*.bin
+*/.vscode
+.vscode
