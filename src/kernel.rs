@@ -71,6 +71,8 @@ pub extern fn rust_start(){
 
     init_isr();
 
+    //unsafe{asm!("INT 0x20")};
+
     // Init page tables
 
     // Init scheduler
@@ -78,10 +80,15 @@ pub extern fn rust_start(){
     // Setup timer interrupts, 10ms
 
     // enable interrupts
+    unsafe{asm!("sti")};
+    unsafe{asm!("nop")};
 
-    
     // Transfer control to init program and transfer to user mode.
     panic!();
+    
+    
+    
+    unsafe{asm!("cli")};
     unsafe{asm!("hlt")}; // Halt the machine
 }
 
@@ -93,6 +100,7 @@ extern fn eh_personality() {}
 /* Make the Rust Compiler happy */
 #[lang = "panic_fmt"] #[no_mangle]
 pub extern fn panic_fmt(fmt: core::fmt::Arguments, file: &'static str, line: u32)->!{
+    unsafe{asm!("cli")}; // Clear interrupts
     println!("\n\nRUST KERNEL PANIC\tin {} at line {}:",file, line);
     println!("\t{}",fmt);
 

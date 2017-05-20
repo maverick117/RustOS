@@ -9,7 +9,7 @@ bits 64
 ; Function for setting up interrupts in long mode
 
 setup_idt:
-
+    
     ret
 
 
@@ -20,4 +20,10 @@ set_isr:
     ret
 
 
-section .data
+default_isr: ; The default isr, clears maskable interrupts and halts the machine
+    cli
+    hlt
+
+section .rodata
+idt64:
+    resb 4096 ; 16 byte per entry * 256 entries
