@@ -13,16 +13,11 @@ extern crate rlibc;
 extern crate spin;
 
 mod vga_console;
+mod isr;
 
 use vga_console::*;
 use core::fmt::Write;
-
-
-#[allow(dead_code)]
-extern "C" {
-    fn set_isr(interrupt_num:u64, function_address:u64);
-}
-
+use isr::*;
 
 extern {
     static multiboot_loc: u32;
@@ -74,6 +69,8 @@ pub extern fn rust_start(){
     
     // Initialize irqs
 
+    init_isr();
+
     // Init page tables
 
     // Init scheduler
@@ -84,7 +81,7 @@ pub extern fn rust_start(){
 
     
     // Transfer control to init program and transfer to user mode.
-    
+    panic!();
     unsafe{asm!("hlt")}; // Halt the machine
 }
 

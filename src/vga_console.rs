@@ -4,6 +4,7 @@
 use core::fmt;
 use spin::Mutex;
 
+#[allow(dead_code)]
 extern "C" {
     fn clear_console();
     fn print_char(txt:u16);
@@ -44,7 +45,7 @@ impl fmt::Write for VGAWriter {
 }
 
 pub static vga: Mutex<VGAWriter> = Mutex::new(VGAWriter {
-    fc : Colors::LightBlue,
+    fc : Colors::LightGray,
     bc : Colors::Black,
 });
 
