@@ -19,6 +19,7 @@ long_start:
   ; Need to setup idt
 
   call setup_idt                  ; Setup IDT
+  int 0x01
   call init_text_console          ; Setup text console
 
   mov qword rcx, 0x0
@@ -28,7 +29,9 @@ long_start:
   mov byte al, [assembly_success_msg + rcx]
   mov byte ah, 0x2f
   mov qword rdi, rax
+  push rcx
   call print_char
+  pop rcx
   inc rcx
   cmp rcx, rbx
   jl .loop

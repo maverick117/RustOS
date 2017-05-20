@@ -3,13 +3,12 @@
 /* Assembly function for setting up an interrupt gate for a service routine */
 #[allow(dead_code)]
 extern "C" {
-    fn set_isr(    offset_1  : u16,
-    selector  : u16,
-    ist       : u8,
-    type_attr : u8,
-    offset_2  : u16,
-    offset_3  : u32,
-    zero      : u32);
+    fn set_isr(  interrupt_num : u8,
+                     offset    : u64,
+                     selector  : u16,
+                     ist       : u8,
+                     type_attr : u8,
+              );
 }
 
 /* Setup the interrupt gates */
