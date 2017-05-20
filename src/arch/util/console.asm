@@ -100,22 +100,36 @@ scroll_one_line: ; Scroll down one line
 print_char: ; void print_char(short word);
     push rax
     push rbx
+    push rcx
 
     mov dword eax, [current_position] ; Get the address to print to
     mov qword rbx, rdi ; Move the first argument
     cmp bl, 0x0a
     je .print_new_line
+    cmp bl, 0x09
+    je .print_tab
     mov word [eax], bx
     add eax, 2 ; Add 2 to the address
     cmp eax, 0xb8000 + 25 * 80 * 2
     je .print_new_line
     mov dword [current_position], eax
 .end:
+
+    pop rcx
     pop rbx
     pop rax
     ret
 .print_new_line:
     call scroll_one_line
+    jmp .end
+.print_tab:
+    mov qword rcx, 0
+.print_tab_loop:
+    mov qword rdi, 0x20
+    call print_char
+    inc rcx
+    cmp rcx, 4
+    jl .print_tab_loop
     jmp .end
 
 
@@ -129,5 +143,5 @@ current_position:
     dq 0xb8000 + 24 * 80 * 2
 
 console_test_msg:
-    db "Text console test...", 0x0a, "If you see two lines of text, then the test is successful",0x0a
+    db "Text console test...", 0x0a, "If you see this text, then console initialization is successful",0x0a
 console_test_msg_len:

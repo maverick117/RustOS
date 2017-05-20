@@ -40,7 +40,7 @@ long_start:
   xor rdx, rdx
   jmp rust_start                 ; Start Rust Kernel Section
 
-  hlt
+  hlt ; Prevent returning into another section.
 
   section .data
 assembly_success_msg:

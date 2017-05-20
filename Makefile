@@ -3,7 +3,7 @@ TARGET=x86_64-RustOS
 
 .PHONY: all, clean, arch_obj, kernel_obj, kernel_ld
 
-all: arch_obj kernel_obj kernel_ld
+all: kernel_obj kernel_ld arch_obj 
 	cd bin; make
 	qemu-system-x86_64 -cdrom iso/os.iso -m 64
 
@@ -13,11 +13,11 @@ arch_obj:
 	
 kernel_obj:
 	xargo build --release --target ${TARGET}
-	
+	cp target/${TARGET}/release/libkernel.a bin/
 
 kernel_ld: src/image.ld
 	cp src/image.ld bin/
-	cp target/${TARGET}/release/libkernel.a bin/
+
 
 clean:
 	xargo clean

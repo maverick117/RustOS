@@ -18,3 +18,6 @@ setup_idt:
 set_isr:
 
     ret
+
+
+section .data
