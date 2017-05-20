@@ -44,8 +44,8 @@ impl fmt::Write for VGAWriter {
 }
 
 pub static vga: Mutex<VGAWriter> = Mutex::new(VGAWriter {
-    fc : Colors::White,
-    bc : Colors::Blue,
+    fc : Colors::LightBlue,
+    bc : Colors::Black,
 });
 
 #[allow(dead_code)]

@@ -4,3 +4,4 @@ doc
 **/*.bin
 **/.vscode
 Cargo.lock
+target
