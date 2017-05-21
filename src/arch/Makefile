@@ -7,7 +7,7 @@ LD=ld
 all: arch_obj
 	${LD} -n -o arch.o -T boot.ld -r *.o
 
-arch_obj: header.o boot.o boot.ld long_boot.o console.o idt.o
+arch_obj: header.o boot.o boot.ld long_boot.o console.o isr.o
 
 header.o: boot/mult_boot_hdr.asm
 	${AS} ${FMT} boot/mult_boot_hdr.asm -o header.o
@@ -21,8 +21,8 @@ long_boot.o: boot/long_boot.asm
 console.o: util/console.asm
 	${AS} ${FMT} util/console.asm -o console.o
 
-idt.o: util/idt.asm
-	${AS} ${FMT} util/idt.asm -o idt.o
+isr.o: util/isr.asm
+	${AS} ${FMT} util/isr.asm -o isr.o
 
 clean:
 	rm -rf *.o *.bin

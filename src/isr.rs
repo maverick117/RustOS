@@ -5,19 +5,7 @@
 extern "C" {
     fn set_isr(  interrupt_num : u8,
                      offset    : u64,
-                     selector  : u16,
-                     ist       : u8,
-                     type_attr : u8,
               );
-}
-
-/* Setup the interrupt gates */
-pub fn init_isr(){
-
-}
-
-pub fn isr_set(int_num : u8, entry : IDTEntry){
-
 }
 
 #[repr(C)]
@@ -30,4 +18,28 @@ pub struct IDTEntry {
     offset_2  : u16,
     offset_3  : u32,
     zero      : u32,
+}
+
+
+/* Setup the interrupt gates */
+pub fn init_idt(){
+
+    unsafe{asm!("hlt")};
+}
+
+
+pub fn isr_set(int_num : u8, entry : IDTEntry){
+
+}
+
+
+impl IDTEntry {
+
+}
+
+
+/* ISR handler function, needs to be compliant with C ABI and have correct symbol */
+#[no_mangle]
+pub extern "C" fn isr_handler(){
+
 }

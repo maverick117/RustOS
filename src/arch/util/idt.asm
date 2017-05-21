@@ -1,90 +1,102 @@
-; File for setting up interrupt descriptor table
+%include "consts.asm"
 
-    global setup_idt
-    global set_isr
+bits 32
+SECTION .text_early
 
-    extern gdt64.code
+EXTERN CODE_SEL_64
 
 
-; Define some constants
 
-FLAG_INTERRUPT equ 0xe
+%define FLAG_INTERRUPT     0xe
 
-FLAG_R0          equ (0 << 5) 
-FLAG_P           equ (1 << 7)
+; Permission rings
+%define FLAG_R0            (0 << 5) 
+%define FLAG_P             (1 << 7)
 
-IDT_ENTRIES      equ 256
+%define IDT_ENTRIES        256
 
-IDT_SIZE         equ (idt64.end - idt64)
+; Macro to generate isr
 
-DEFAULT_IST_SIZE equ (default_isr.end - default_isr)
-
-%macro IDT_ENTRY 0
-    dq 0x0000000000000000
-    dq 0x0000000000000000
+%macro ISR 1
+isr%1:
+    jmp $
 %endmacro
 
-    section .text
-    bits 64
+ISRS:
+%assign i 0
+%rep IDT_ENTRIES
+ISR i
+%assign i (i+1)
+%endrep
 
-default_isr: ; The default isr, clears maskable interrupts and halts the machine
-    cli
-    ;mov rax, 0x4f204f524f524f45 ; Print "ERR " to the screen
-    ;mov qword [0xb8000], rax
-    hlt
-.end:
+%define ISR_SIZE (isr1 - isr0)
 
-; Function for setting up interrupts in long mode
-
-setup_idt:
-    push rbx 
-
-
-
-.set_one_entry:
-
-
-
-
-    push rcx ; Preserve rcx counter
-    call set_isr
-    pop rcx
-
-    inc rcx
-    cmp rcx, 256
-    jl .set_one_entry
-
-    pop rbx
-    ret
-
-
-; Function for setting Interrupt Service Routines for interrupts
-
-set_isr:
-    ; As per calling convention, rdi rsi rdx rcx r8 are used for argument passing
-    ; rdi: interrupt number
-    ; rsi: offset
-    ; rdx: selector
-    ; rcx: ist
-    ; r8 : type_attr
-
-    
-
-    ret
-
-
-
-
-    section .rodata
-    align 8
-idt64:
-    %assign i 0
-    %rep IDT_ENTRIES
-    IDT_ENTRY
-    %assign i (i+1)
-    %endrep
-.end:
-
+ALIGN 8
 IDTR:
-    dw (idt64.end - idt64 - 1)
-    dq idt64
+    dw (IDTEND - IDT - 1)
+    dq IDT
+
+%macro IDTENTRY 0
+    dd 0x00000000
+    dd 0x00000000
+    dd 0x00000000
+    dd 0x00000000
+%endmacro
+
+ALIGN 8
+IDT:
+%assign i 0
+%rep IDT_ENTRIES
+IDTENTRY
+%assign i (i+1)
+%endrep
+IDTEND:
+
+GLOBAL populate_idt
+populate_idt:
+    mov eax, IDT
+    mov ebx, isr0
+    or ebx, (VIRT_BASE & 0xFFFFFFFF)
+
+.idt_init_one:
+    mov ecx, ebx
+    mov word [eax], cx ; First entry, offset[0-15], word
+    add eax, 2
+
+    mov word [eax], CODE_SEL_64 ; Second entry, selection, word
+    add eax, 2
+    
+    mov byte [eax], 0           ; ist, byte
+    add eax, 1
+
+    mov byte [eax], (FLAG_P | FLAG_R0 | FLAG_INTERRUPT) ; Flags, byte
+    add eax, 1
+
+    shr ecx, 16
+    mov word [eax], cx ; offset[31-16], word
+    add eax, 2
+
+    mov dword [eax], (VIRT_BASE >> 32) ; Long mode
+    add eax, 4
+
+    mov dword [eax], 0x0
+    add eax, 4
+
+    add ebx, ISR_SIZE
+
+    cmp eax, IDTEND
+    jl .idt_init_one
+
+    lidt[IDTR]
+    ret
+
+    BITS 64
+    GLOBAL fixup_idtr
+fixup_idtr:
+    mov rax, VIRT_BASE + IDTR + 2
+    mov rbx, VIRT_BASE + IDT
+    mov qword [rax], rbx
+
+    sub rax, 2
+    lidt[rax]
+    ret

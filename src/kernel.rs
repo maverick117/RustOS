@@ -35,7 +35,7 @@ extern {
 
 
 #[no_mangle]
-pub extern fn rust_start(){
+pub extern "C" fn rust_start(){
     vga.lock().clear_screen();
 
     let finish_msg : &str = "done.\n";
@@ -69,9 +69,7 @@ pub extern fn rust_start(){
     
     // Initialize irqs
 
-    init_isr();
-
-    //unsafe{asm!("INT 0x20")};
+    init_idt();
 
     // Init page tables
 
@@ -80,11 +78,12 @@ pub extern fn rust_start(){
     // Setup timer interrupts, 10ms
 
     // enable interrupts
+    //panic!("Unimplemented!");
     unsafe{asm!("sti")};
     unsafe{asm!("nop")};
-
-    // Transfer control to init program and transfer to user mode.
     panic!();
+    // Transfer control to init program and transfer to user mode.
+    
     
     
     

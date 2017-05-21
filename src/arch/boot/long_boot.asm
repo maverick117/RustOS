@@ -14,12 +14,7 @@ long_start:
   mov es, ax
   mov fs, ax
   mov gs, ax
-
   
-  ; Need to setup idt
-
-  call setup_idt                  ; Setup IDT
-  int 0x01
   call init_text_console          ; Setup text console
 
   mov qword rcx, 0x0

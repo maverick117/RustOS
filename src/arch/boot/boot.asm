@@ -1,23 +1,111 @@
 	global start
 	global multiboot_loc
+
+; gdt.asm
+	extern populate_gdt
+	extern DATA_SEL
+	extern CODE_SEL_32
+	extern CODE_SEL_64
+
+; idt.asm
+	extern populate_idt
+
 	extern long_start
 
-	section .text
+	extern kernel_size
+
+%include "../util/consts.asm"
+
+	section .text_early
 	bits 32
+
 start:
   cli                             ; Clear interrupts
-	mov esp, stack_top              ; Move stack to top
+
 	call check_multiboot            ; Check for multiboot startup
-	mov dword [multiboot_loc], ebx        ; Move multiboot information location to mem
+	mov dword [multiboot_loc], ebx  ; Move multiboot information location to mem
 	call check_cpuid                ; Check for CPUID restraints
 	call check_amd64                ; Check if supports long mode
-	call set_page_table             ; Prepare page table for long mode
-	call enable_paging
-	mov dword [0xb8000], 0x2f4b2f4f ; Green 'OK' to VGA screen buffer
-	lgdt [gdt64.pointer]
-	jmp gdt64.code:long_start       ; Long jump to switch to long mode
-	mov al, 'K'
-	jmp error
+
+	call populate_gdt               ; lgdt
+	
+	mov eax, DATA_SEL
+	mov ds, eax
+	mov es, eax
+	mov fs, eax
+	mov gs, eax
+	mov ss, eax
+
+	mov esp, (STACK_PAGES_PHYS + S_PAGES * PAGE_SIZE)
+	mov ebp, esp
+
+	jmp CODE_SEL_32:gdt_start
+
+gdt_start:
+	
+	call populate_idt               ; Populate idt
+	
+	; Size of kernel rounded up to page size
+	mov eax, kernel_size
+	add eax, PAGE_MASK
+	and eax, ~PAGE_MASK
+
+	; end of kernel page
+	mov ebx, eax
+	add ebx, KERNEL_START
+
+	; pte index of first kernel page
+	mov ecx, PTE(KERNEL_START)
+
+	; page structure count
+	mov edx, 4
+
+.count_early:
+
+;
+;   if (pte_index == 512) reserved_pages++; pte_index = 0; else pte_index++;
+;
+
+	sub eax, PAGE_SIZE
+	cmp ecx, 512
+	jne .no_new_pt
+
+	add edx, 1
+	mov ecx, 0
+	jmp .ce_loop_end
+
+.no_new_pt:
+	add ecx, 1
+.ce_loop_end:
+	cmp eax, 0
+	jmp .count_early
+
+	; ebx = page aligned end kernel address
+	; edx = number of page tables needed to fully map kernel
+	; ecx = end of kernel paging address
+
+	mov ecx, edx
+	shl ecx, PAGE_SHIFT
+	add ecx, ebx
+	add ecx, PAGE_SIZE
+
+	mov eax, ebx
+
+; Nullify page memory areas for our use
+zero_page_mem:
+	mov dword [eax], 0x0
+	add eax, 4
+	cmp eax, ecx
+	jne zero_page_mem
+
+
+
+
+
+
+
+
+; Preliminary checks on system
 
 check_multiboot:
 	cmp eax, 0x36d76289             ; Check for magic value
@@ -53,41 +141,6 @@ check_amd64:
   mov al, '3'
 	jmp error
 
-set_page_table:
-	mov eax, p3_table               ; Move p3_table addresss to eax
-	or eax, 0b11                    ; present+writable
-	mov [p4_table], eax             ; p3_table as first entry of p4_table
-	mov eax, p2_table               ; Move p2_table address to eax
-	or eax, 0b11                    ; p+w
-	mov [p3_table], eax             ; p2_table as first entry of p3_table
-  mov ecx, 0                      ; Counter
-.set_p2:
-	mov eax, 0x200000
-	mul ecx
-	or eax, 0b10000011              ; Huge + present + writable
-	mov [p2_table + ecx * 8], eax
-	inc ecx
-	cmp ecx, 512
-	jne .set_p2
-	ret
-
-enable_paging:
-	mov eax, p4_table
-	mov cr3, eax
-
-	mov eax, cr4
-	or eax, 1<<5
-	mov cr4, eax
-
-	mov ecx, 0xC0000080
-	rdmsr
-	or eax, 1<<8
-	wrmsr
-
-	mov eax, cr0
-	or eax, 1<<31
-	mov cr0, eax
-	ret
 
 error:
 	mov dword [0xb8000], 0x4f524f45 ; Print 'ERR: ' to VGA screen buffer
@@ -96,28 +149,8 @@ error:
 	mov [0xb800a], al
 	hlt
 
-
-	section .bss ; Stack
-	align 4096
-p4_table:
-	resb 4096
-p3_table:
-  resb 4096
-p2_table:
-  resb 4096
-stack_bottom:
-  resb 4096
-stack_top:
-
-	section .rodata
-gdt64:
-	dq 0
-.code: equ $ - gdt64
- 	dq (1<<43) | (1<<44) | (1<<47) | (1<<53)
-.pointer:
-	dw $ - gdt64 - 1
-	dq gdt64
-
+	
 	section .data
+
 multiboot_loc:
 	dq 0x0
