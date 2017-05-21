@@ -2,6 +2,19 @@
 	global multiboot_loc
 	extern long_start
 
+	global gdt64
+	global gdt64.code
+	global idt64
+
+
+; Macro for generating an idt
+%macro GEN_IDT 0
+%rep 256
+dq 0x0
+dq 0x0
+%endrep
+%endmacro
+
 	section .text
 	bits 32
 start:
@@ -15,6 +28,7 @@ start:
 	call enable_paging
 	mov dword [0xb8000], 0x2f4b2f4f ; Green 'OK' to VGA screen buffer
 	lgdt [gdt64.pointer]
+	lidt [idt64.pointer]
 	jmp gdt64.code:long_start       ; Long jump to switch to long mode
 	mov al, 'K'
 	jmp error
@@ -111,13 +125,21 @@ stack_top:
 
 	section .rodata
 gdt64:
-	dq 0
+	dq 0x0
 .code: equ $ - gdt64
  	dq (1<<43) | (1<<44) | (1<<47) | (1<<53)
 .pointer:
 	dw $ - gdt64 - 1
 	dq gdt64
 
+idt64:
+GEN_IDT
+.pointer:
+	dw $ - idt64 - 1
+	dq idt64
+
+
 	section .data
+
 multiboot_loc:
 	dq 0x0

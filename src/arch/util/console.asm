@@ -108,6 +108,8 @@ print_char: ; void print_char(short word);
     je .print_new_line
     cmp bl, 0x09
     je .print_tab
+    cmp bl, 0xd
+    je .print_cr
     mov word [eax], bx
     add eax, 2 ; Add 2 to the address
     cmp eax, 0xb8000 + 25 * 80 * 2
@@ -131,6 +133,10 @@ print_char: ; void print_char(short word);
     cmp rcx, 4
     jl .print_tab_loop
     jmp .end
+.print_cr:
+    mov dword [current_position], 0xb8000 + 24 * 80 * 2
+    jmp .end
+
 
 
 section .data

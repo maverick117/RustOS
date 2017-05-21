@@ -14,10 +14,13 @@ extern crate spin;
 
 mod vga_console;
 mod isr;
+mod mem;
 
 use vga_console::*;
 use core::fmt::Write;
 use isr::*;
+
+pub use isr::interrupt_handler;
 
 extern {
     static multiboot_loc: u32;
@@ -41,6 +44,9 @@ pub extern fn rust_start(){
     let finish_msg : &str = "done.\n";
 
     println!("Welcome to Rust Kernel."); // Print welcome banner
+
+
+    println!("Multiboot address location: 0x{:x}", multiboot_loc);
 
     let boot_info = unsafe{multiboot2::load(multiboot_loc as usize)}; // Get info
     let memory_map_tag = boot_info.memory_map_tag().expect("Memory map tag required");
@@ -84,12 +90,12 @@ pub extern fn rust_start(){
     unsafe{asm!("nop")};
 
     // Transfer control to init program and transfer to user mode.
-    panic!();
+    //panic!();
     
+    loop{}
     
-    
-    unsafe{asm!("cli")};
-    unsafe{asm!("hlt")}; // Halt the machine
+    //unsafe{asm!("cli")};
+    //unsafe{asm!("hlt")}; // Halt the machine
 }
 
 
@@ -103,7 +109,6 @@ pub extern fn panic_fmt(fmt: core::fmt::Arguments, file: &'static str, line: u32
     unsafe{asm!("cli")}; // Clear interrupts
     println!("\n\nRUST KERNEL PANIC\tin {} at line {}:",file, line);
     println!("\t{}",fmt);
-
     println!("Kernel halted.");
     unsafe{asm!("hlt")}
     loop{}

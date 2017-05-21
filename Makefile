@@ -7,6 +7,9 @@ all: kernel_obj kernel_ld arch_obj
 	cd bin; make
 	qemu-system-x86_64 -cdrom iso/os.iso -m 64
 
+run: iso/os.iso
+	qemu-system-x86_64 -cdrom iso/os.iso -m 64
+
 arch_obj: 
 	cd src/arch; make
 	cp src/arch/arch.o bin/

@@ -1,90 +1,87 @@
-; File for setting up interrupt descriptor table
+    global set_isr_gate
+    global set_default_isr
 
-    global setup_idt
-    global set_isr
-
+    extern idt64
+    extern idt64.pointer
     extern gdt64.code
 
+    extern interrupt_handler
 
-; Define some constants
+    bits 64
+    section .text
 
-FLAG_INTERRUPT equ 0xe
 
-FLAG_R0          equ (0 << 5) 
-FLAG_P           equ (1 << 7)
-
-IDT_ENTRIES      equ 256
-
-IDT_SIZE         equ (idt64.end - idt64)
-
-DEFAULT_IST_SIZE equ (default_isr.end - default_isr)
-
-%macro IDT_ENTRY 0
-    dq 0x0000000000000000
-    dq 0x0000000000000000
+%macro SET_ISR 1
+mov rdi, %1
+mov rsi, isr%1
+call set_isr_gate
 %endmacro
 
-    section .text
-    bits 64
+set_default_isr:
 
-default_isr: ; The default isr, clears maskable interrupts and halts the machine
-    cli
-    ;mov rax, 0x4f204f524f524f45 ; Print "ERR " to the screen
-    ;mov qword [0xb8000], rax
-    hlt
-.end:
+    %assign i 0
+    %rep 256
+    SET_ISR i
+    %assign i (i+1)
+    %endrep
 
-; Function for setting up interrupts in long mode
+    ret
 
-setup_idt:
-    push rbx 
+; Function to set one isr gate for one idt entry
+; fn set_isr_gate(num : usize, addr: usize) , registers rdi and rsi
+set_isr_gate:
+    push rbx
+    mov rbx, rdi
+    shl rbx, 4 ; Get the byte offset to the entry
+    mov rax, idt64
+    add rax, rbx ; Get the absolute offset
+    mov rbx, rsi ; Move the address of the isr to rbx
+    mov word [rax], bx ; First part of entry, offset [0:15]
+    add rax, 2
 
+    mov rcx, gdt64.code
+    mov word [rax], cx ; Segment selector
+    add rax, 2
 
+    mov byte [rax], 0  ; IST
+    inc rax
 
-.set_one_entry:
+    mov byte [rax], (1 << 7) | (0 << 5) | 0xe
+    inc rax
 
+    shr rbx, 16
+    mov word [rax], bx ; Second part of offset
+    add rax, 2
 
+    shr rbx, 16
+    mov dword [rax], ebx; Last part
+    add rax, 4
 
-
-    push rcx ; Preserve rcx counter
-    call set_isr
-    pop rcx
-
-    inc rcx
-    cmp rcx, 256
-    jl .set_one_entry
+    mov dword [eax], 0
 
     pop rbx
     ret
 
+common_interrupt_stub:
+    pop qword rsi
+    pop qword rdi
 
-; Function for setting Interrupt Service Routines for interrupts
-
-set_isr:
-    ; As per calling convention, rdi rsi rdx rcx r8 are used for argument passing
-    ; rdi: interrupt number
-    ; rsi: offset
-    ; rdx: selector
-    ; rcx: ist
-    ; r8 : type_attr
+    call interrupt_handler
 
     
+    iretq
 
-    ret
+%macro GEN_ISR 1
+    global isr%1
+isr%1:
+    cli
+    push qword 0
+    push qword %1
+    jmp common_interrupt_stub
+%endmacro
 
-
-
-
-    section .rodata
-    align 8
-idt64:
-    %assign i 0
-    %rep IDT_ENTRIES
-    IDT_ENTRY
-    %assign i (i+1)
-    %endrep
-.end:
-
-IDTR:
-    dw (idt64.end - idt64 - 1)
-    dq idt64
+%assign i 0
+%rep 256
+GEN_ISR i
+%assign i (i+1)
+%endrep

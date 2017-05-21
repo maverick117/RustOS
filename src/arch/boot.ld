@@ -13,6 +13,14 @@ SECTIONS {
 		*(.text)
 	}
 
+	.data : {
+		*(.data .data.*)
+	}
+
+	.bss : {
+		*(.bss .bss.*)
+	}
+
 	.rodata :
 	{
 		*(.rodata .rodata.*)

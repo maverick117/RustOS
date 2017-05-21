@@ -1,5 +1,5 @@
   global long_start
-  extern setup_idt
+  
   extern init_text_console
   extern rust_start
   extern print_char
@@ -18,8 +18,7 @@ long_start:
   
   ; Need to setup idt
 
-  call setup_idt                  ; Setup IDT
-  int 0x01
+  ;int 0x01
   call init_text_console          ; Setup text console
 
   mov qword rcx, 0x0
