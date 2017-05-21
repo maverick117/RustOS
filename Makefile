@@ -10,6 +10,10 @@ all: kernel_obj kernel_ld arch_obj
 run: iso/os.iso
 	qemu-system-x86_64 -cdrom iso/os.iso -m 64
 
+run-gdb: iso/os.iso
+	qemu-system-x86_64 -cdrom iso/os.iso -m 64 -s -S
+	
+
 arch_obj: 
 	cd src/arch; make
 	cp src/arch/arch.o bin/

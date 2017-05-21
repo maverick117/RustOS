@@ -1,3 +1,5 @@
+/* Memory module for the kernel */
+
 pub struct Page{
     address : u64,
 }

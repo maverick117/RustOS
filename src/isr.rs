@@ -11,10 +11,13 @@ extern {
 
 
 /* Setup the interrupt gates */
+#[inline]
 pub fn init_isr(){
     //println!("GDT address: 0x{:x}, IDT address: 0x{:x}", gdt64, idt64);
     
     unsafe{set_default_isr()};
+    unsafe{asm!("sti")};
+    unsafe{asm!("nop")};
 }
 
 #[repr(C)]
@@ -32,7 +35,9 @@ pub struct IDTEntry {
 #[no_mangle]
 #[allow(dead_code)]
 pub extern "C" fn interrupt_handler(num: usize, errno: usize){
+    println!("Interrupt {} called.", num);
+}
+
+pub struct trap_registers {
     
-    println!("Interrupt {} called.\n", num);
-    unsafe{asm!("hlt")};
 }

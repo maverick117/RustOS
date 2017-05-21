@@ -15,6 +15,7 @@ extern crate spin;
 mod vga_console;
 mod isr;
 mod mem;
+mod process;
 
 use vga_console::*;
 use core::fmt::Write;
@@ -86,13 +87,17 @@ pub extern fn rust_start(){
     // Setup timer interrupts, 10ms
 
     // enable interrupts
-    unsafe{asm!("sti")};
-    unsafe{asm!("nop")};
+
 
     // Transfer control to init program and transfer to user mode.
     //panic!();
+
     
-    loop{}
+    loop{
+        
+    };
+
+    panic!();
     
     //unsafe{asm!("cli")};
     //unsafe{asm!("hlt")}; // Halt the machine

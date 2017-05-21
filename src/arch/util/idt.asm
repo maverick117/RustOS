@@ -63,12 +63,23 @@ set_isr_gate:
     ret
 
 common_interrupt_stub:
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    
     pop qword rsi
     pop qword rdi
 
     call interrupt_handler
 
-    
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    sti
     iretq
 
 %macro GEN_ISR 1
