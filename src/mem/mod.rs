@@ -1,5 +1,8 @@
 /* Memory module for the kernel */
 
+mod area_frame_allocator;
+
+pub use self::area_frame_allocator::AreaFrameAllocator;
 
 pub const PAGE_SIZE : usize = 4096;
 
@@ -15,7 +18,7 @@ impl Frame {
 }
 
 pub trait FrameAllocator {
-    fn allocate(&mut self) -> Option<Frame>;
-    fn deallocate(&mut self, frame:Frame);
+    fn allocate_frame(&mut self) -> Option<Frame>;
+    fn deallocate_frame(&mut self, frame:Frame);
 }
 

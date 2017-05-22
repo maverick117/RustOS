@@ -22,6 +22,7 @@ mod process;
 use vga_console::*;
 use core::fmt::Write;
 use isr::*;
+use mem::*;
 
 pub use isr::interrupt_handler;
 
@@ -76,6 +77,16 @@ pub extern fn rust_start() -> !{
 
     let multiboot_start = multiboot_loc as usize;
     let multiboot_end = multiboot_start + (boot_info.total_size as usize);
+
+    let mut frame_allocator = mem::AreaFrameAllocator::new(kernel_start as usize, kernel_end as usize, multiboot_start, multiboot_end, memory_map_tag.memory_areas());
+
+    //println!("{:?}",frame_allocator.allocate_frame());
+    for i in 0.. {
+        if let None = frame_allocator.allocate_frame() {
+            println!("allocated {} frames",i);
+            break;
+        }
+    }
     loop{};
 /*
     println!("Kernel start address: 0x{:x}", kernel_start);
