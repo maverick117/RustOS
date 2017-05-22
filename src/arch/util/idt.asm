@@ -79,9 +79,9 @@ common_interrupt_stub:
     ;push r9
     ;push r10
     ;push r11
-
+    pop rsi
     mov rdi, rsp
-    sub rsp, 8
+    ;sub rsp, 8
     call interrupt_handler
     ;add rdi, 9*8
     
@@ -106,7 +106,7 @@ common_interrupt_stub:
 isr%1:
     ;cli
     ;push word 0
-    ;push qword %1
+    push qword %1
     jmp common_interrupt_stub
 %endmacro
 
