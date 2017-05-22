@@ -74,7 +74,7 @@ set_page_table:
 	mov eax, p2_table               ; Move p2_table address to eax
 	or eax, 0b11                    ; p+w
 	mov [p3_table], eax             ; p2_table as first entry of p3_table
-  mov ecx, 0                      ; Counter
+  	mov ecx, 0                      ; Counter
 .set_p2:
 	mov eax, 0x200000
 	mul ecx
@@ -83,6 +83,10 @@ set_page_table:
 	inc ecx
 	cmp ecx, 512
 	jne .set_p2
+
+	mov eax, p4_table
+	or eax, 0b11                    ; Setup recursive mapping
+	mov [p4_table + 511 * 8], eax
 	ret
 
 enable_paging:

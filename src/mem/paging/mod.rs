@@ -1,4 +1,4 @@
-use memory::PAGE_SIZE;
+use mem::PAGE_SIZE;
 
 const ENTRY_COUNT : usize = 512;
 
