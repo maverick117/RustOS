@@ -100,7 +100,7 @@ pub fn init_isr(){
 
     unsafe{set_isr_gate(8,handler_with_error_code!(double_fault_handler))};
 
-    //unsafe{set_isr_gate(14,handler_with_error_code!(page_fault_handler))};  
+    unsafe{set_isr_gate(14,handler_with_error_code!(page_fault_handler))};  
     
     //loop{
         unsafe{invoke_breakpoint()};
@@ -109,9 +109,9 @@ pub fn init_isr(){
 
     //unsafe{asm!("ud2")};
     unsafe{*(0xdeadbeaf as *mut u64) = 42};
-    unsafe{asm!("mov dx, 0; div dx" ::: "ax","dx" : "volatile" , "intel")};
-    unsafe{asm!("sti")};
-    unsafe{asm!("nop")};
+    //unsafe{asm!("mov dx, 0; div dx" ::: "ax","dx" : "volatile" , "intel")};
+    //unsafe{asm!("sti")};
+    //unsafe{asm!("nop")};
 }
 
 #[repr(C)]
@@ -179,7 +179,7 @@ bitflags!{
 #[no_mangle]
 extern "C" fn page_fault_handler(stack_frame : &ExceptionStackFrame, error_code : u64) {
     println!("\nPROCESSOR EXCEPTION: PAGE FAULT w/ Error Code = {:?}\n{:#?}",PageFaultErrorCode::from_bits(error_code).unwrap(),unsafe{&*stack_frame});
-    //loop{};
+    loop{};
 }
 
 #[no_mangle] 

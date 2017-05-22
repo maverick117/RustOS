@@ -39,9 +39,15 @@ extern {
  *   Paging: Identity paging set
  */
 
+ fn kernel_stack_overflow(i : i64){
+     println!("Iteration {}",i);
+     
+     kernel_stack_overflow(i+1);
+ }
+
 
 #[no_mangle]
-pub extern fn rust_start(){
+pub extern fn rust_start() -> !{
     //vga.lock().clear_screen();
 
     let finish_msg : &str = "done.\n";
@@ -70,7 +76,7 @@ pub extern fn rust_start(){
 
     let multiboot_start = multiboot_loc as usize;
     let multiboot_end = multiboot_start + (boot_info.total_size as usize);
-
+    loop{};
 /*
     println!("Kernel start address: 0x{:x}", kernel_start);
     println!("Kernel  end  address: 0x{:x}", kernel_end);
@@ -80,6 +86,8 @@ pub extern fn rust_start(){
     // Initialize irqs
 
     init_isr();
+
+    //kernel_stack_overflow(0);
 
     //unsafe{asm!("INT 0x20")};
 
@@ -94,11 +102,11 @@ pub extern fn rust_start(){
 
     // Transfer control to init program and transfer to user mode.
     //panic!();
-
+    println!("Test");
 
     let mut num : isize = 0;
     loop{
-        unsafe{*(0xdeaddeadafafdfdf as *mut u64) = 50};
+        unsafe{*(0xdeadbeaf as *mut u64) = 50};
     };
 
     panic!();
