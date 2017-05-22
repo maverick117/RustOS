@@ -4,13 +4,15 @@
  *  All Rights Reserved
  */
 
-#![feature(lang_items,asm,const_fn)]
+#![feature(lang_items,asm,const_fn,core_intrinsics,use_extern_macros,naked_functions)]
 #![no_std]
 
 
 extern crate multiboot2;
 extern crate rlibc;
 extern crate spin;
+#[macro_use]
+extern crate bitflags;
 
 mod vga_console;
 mod isr;
@@ -40,7 +42,7 @@ extern {
 
 #[no_mangle]
 pub extern fn rust_start(){
-    vga.lock().clear_screen();
+    //vga.lock().clear_screen();
 
     let finish_msg : &str = "done.\n";
 
@@ -69,11 +71,12 @@ pub extern fn rust_start(){
     let multiboot_start = multiboot_loc as usize;
     let multiboot_end = multiboot_start + (boot_info.total_size as usize);
 
+/*
     println!("Kernel start address: 0x{:x}", kernel_start);
     println!("Kernel  end  address: 0x{:x}", kernel_end);
     println!("Multiboot start address: 0x{:x}", multiboot_start);
     println!("Multiboot  end  address: 0x{:x}", multiboot_end);
-    
+    */
     // Initialize irqs
 
     init_isr();
@@ -92,9 +95,10 @@ pub extern fn rust_start(){
     // Transfer control to init program and transfer to user mode.
     //panic!();
 
-    
+
+    let mut num : isize = 0;
     loop{
-        
+        unsafe{*(0xdeaddeadafafdfdf as *mut u64) = 50};
     };
 
     panic!();

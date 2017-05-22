@@ -1,5 +1,6 @@
     global set_isr_gate
     global set_default_isr
+    global invoke_breakpoint
 
     extern idt64
     extern idt64.pointer
@@ -9,7 +10,7 @@
 
     bits 64
     section .text
-
+    align 8
 
 %macro SET_ISR 1
 mov rdi, %1
@@ -62,32 +63,50 @@ set_isr_gate:
     pop rbx
     ret
 
+invoke_breakpoint:
+
+    int 3
+    ret
+
 common_interrupt_stub:
-    push rax
-    push rbx
-    push rcx
-    push rdx
-    push rsi
-    push rdi
-    
-    pop qword rsi
-    pop qword rdi
+    ;mov dword [0xb8000], 0x2f4b2f4f 
+    ;push rax
+    ;push rcx
+    ;push rdx
+    ;push rsi
+    ;push rdi
+    ;push r8
+    ;push r9
+    ;push r10
+    ;push r11
 
+    mov rdi, rsp
+    sub rsp, 8
     call interrupt_handler
+    ;add rdi, 9*8
+    
+    ;call interrupt_handler
 
-    pop rdx
-    pop rcx
-    pop rbx
-    pop rax
-    sti
+    ;pop r11
+    ;pop r10
+    ;pop r9
+    ;pop r8
+    ;pop rdi
+    ;pop rsi
+    ;pop rdx
+    ;pop rcx
+    ;pop rax
+
+    ;mov dword [0xb8004], 0x4f524f45
+    ;sti
     iretq
 
 %macro GEN_ISR 1
     global isr%1
 isr%1:
-    cli
-    push qword 0
-    push qword %1
+    ;cli
+    ;push word 0
+    ;push qword %1
     jmp common_interrupt_stub
 %endmacro
 

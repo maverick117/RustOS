@@ -1,11 +1,11 @@
 LD=ld
 TARGET=x86_64-RustOS
 
-.PHONY: all, clean, arch_obj, kernel_obj, kernel_ld
+.PHONY: all, clean, arch_obj, kernel_obj, kernel_ld, debug, run, run-gdb
 
 all: kernel_obj kernel_ld arch_obj 
 	cd bin; make
-	qemu-system-x86_64 -cdrom iso/os.iso -m 64
+	qemu-system-x86_64 -cdrom iso/os.iso -m 64 -d cpu_reset
 
 run: iso/os.iso
 	qemu-system-x86_64 -cdrom iso/os.iso -m 64
@@ -13,6 +13,8 @@ run: iso/os.iso
 run-gdb: iso/os.iso
 	qemu-system-x86_64 -cdrom iso/os.iso -m 64 -s -S
 	
+debug: iso/os.iso
+	qemu-system-x86_64 -cdrom iso/os.iso -m 64 -d int,cpu_reset
 
 arch_obj: 
 	cd src/arch; make

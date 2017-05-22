@@ -10,6 +10,7 @@ crate-type = ["staticlib"]
 multiboot2 = "0.1.0"
 rlibc = "0.1.4"
 spin = "0.4.5"
+bitflags = "0.9.0"
 
 [profile.release]
 panic = "abort"

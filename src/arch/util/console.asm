@@ -12,7 +12,7 @@ init_text_console:
     push rbx
     push rax
 
-    call clear_console
+    ;call clear_console
     ; UNIX SYSV ABI calling convention
 
     mov qword rcx, 0x0

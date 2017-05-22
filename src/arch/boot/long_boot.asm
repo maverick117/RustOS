@@ -1,5 +1,5 @@
   global long_start
-  
+
   extern init_text_console
   extern rust_start
   extern print_char
