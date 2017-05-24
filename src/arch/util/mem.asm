@@ -10,7 +10,5 @@ flush_tlb: ; fn flush_tlb(addr: *const _);
     
     mov rax, rsi
     invlpg [rsi]
-
-
     pop rbx
     ret

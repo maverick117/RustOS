@@ -2,6 +2,7 @@
 
 mod entry;
 mod table;
+mod temp_page;
 
 use mem::PAGE_SIZE;
 use mem::Frame;
@@ -163,6 +164,21 @@ pub fn test_paging<A>(allocator: &mut A) where A: FrameAllocator {
     unsafe{flush_tlb(page.start_address() as VirtualAddress)};
 
     println!("{:#x}",unsafe{*(Page::containing_address(addr).start_address() as *const u64)});
+
+
+}
+
+pub struct InactivePageTable {
+    p4_frame: Frame,
+}
+
+impl InactivePageTable {
+    pub fn new(frame: Frame) -> InactivePageTable {
+        // TODO: nullify and recursively map the frame
+        InactivePageTable { p4_frame: frame }
+    }
+
+
 
 
 }
