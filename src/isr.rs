@@ -91,7 +91,7 @@ extern {
 pub fn init_isr(){
     //println!("GDT address: 0x{:x}, IDT address: 0x{:x}", gdt64, idt64);
     
-    //unsafe{set_default_isr()};
+    unsafe{set_default_isr()};
     unsafe{set_isr_gate(0,handler!(div_by_zero_handler))};
 
     unsafe{set_isr_gate(3,handler!(breakpoint_handler))};
@@ -103,12 +103,12 @@ pub fn init_isr(){
     unsafe{set_isr_gate(14,handler_with_error_code!(page_fault_handler))};  
     
     //loop{
-        unsafe{invoke_breakpoint()};
-        println!("Successfully returned!");
+        //unsafe{invoke_breakpoint()};
+        //println!("Successfully returned!");
     //}
 
     //unsafe{asm!("ud2")};
-    unsafe{*(0xdeadbeaf as *mut u64) = 42};
+    //unsafe{*(0xdeadbeaf as *mut u64) = 42};
     //unsafe{asm!("mov dx, 0; div dx" ::: "ax","dx" : "volatile" , "intel")};
     //unsafe{asm!("sti")};
     //unsafe{asm!("nop")};

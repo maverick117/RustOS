@@ -3,6 +3,8 @@
 mod area_frame_allocator;
 mod paging;
 
+pub use self::paging::test_paging;
+
 pub use self::area_frame_allocator::AreaFrameAllocator;
 
 use self::paging::PhysicalAddress;

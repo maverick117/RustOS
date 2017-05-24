@@ -4,7 +4,7 @@
  *  All Rights Reserved
  */
 
-#![feature(lang_items,asm,const_fn,core_intrinsics,use_extern_macros,naked_functions)]
+#![feature(lang_items,asm,const_fn,core_intrinsics,use_extern_macros,naked_functions,unique)]
 #![no_std]
 
 
@@ -50,7 +50,8 @@ extern {
 #[no_mangle]
 pub extern fn rust_start() -> !{
     //vga.lock().clear_screen();
-
+    init_isr();
+    
     let finish_msg : &str = "done.\n";
 
     println!("Welcome to Rust Kernel."); // Print welcome banner
@@ -81,6 +82,10 @@ pub extern fn rust_start() -> !{
     let mut frame_allocator = mem::AreaFrameAllocator::new(kernel_start as usize, kernel_end as usize, multiboot_start, multiboot_end, memory_map_tag.memory_areas());
 
     //println!("{:?}",frame_allocator.allocate_frame());
+
+    mem::test_paging(&mut frame_allocator);
+
+    /*
     for i in 0.. {
         if let None = frame_allocator.allocate_frame() {
             println!("allocated {} frames",i);
@@ -88,6 +93,8 @@ pub extern fn rust_start() -> !{
         }
     }
     loop{};
+    */
+    
 /*
     println!("Kernel start address: 0x{:x}", kernel_start);
     println!("Kernel  end  address: 0x{:x}", kernel_end);
@@ -96,7 +103,7 @@ pub extern fn rust_start() -> !{
     */
     // Initialize irqs
 
-    init_isr();
+    
 
     //kernel_stack_overflow(0);
 
