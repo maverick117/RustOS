@@ -14,6 +14,13 @@ struct TinyAllocator([Option<Frame>;3]);
 
 
 impl TemporaryPage {
+    pub fn new<A>(page: Page, allocator: &mut A) -> TemporaryPage where A: FrameAllocator{
+        TemporaryPage{
+            page: page,
+            allocator: TinyAllocator::new(allocator),
+        }
+    }
+
     pub fn map(&mut self, frame: Frame, active_table: &mut ActivePageTable) -> VirtualAddress {
         use super::entry::WRITABLE;
 

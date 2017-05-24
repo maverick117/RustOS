@@ -15,6 +15,7 @@ use core::ops::{Deref, DerefMut};
 use self::table::{Table, Level4};
 use core::ptr::Unique;
 use mem::paging::temp_page::{TemporaryPage};
+use multiboot2::BootInformation;
 
 const ENTRY_COUNT : usize = 512;
 
@@ -82,21 +83,34 @@ impl ActivePageTable {
         }
     }
 
-    pub fn with<F>(&mut self, table: &mut InactivePageTable, f: F) where F: FnOnce(&mut ActivePageTable) {
-        self.p4_mut()[511].set(table.p4_frame.clone(), PRESENT | WRITABLE);
+    pub fn with<F>(&mut self, table: &mut InactivePageTable, temporary_page: &mut TemporaryPage, f: F) where F: FnOnce(&mut ActivePageTable) {
+        {
+            let backup = Frame::containing_address({let val: usize;unsafe{asm!("mov rax, cr3":"=rax"(val):::"intel","volatile")};val});
+            let p4_table = temporary_page.map_table_frame(backup.clone(),self);
 
-        unsafe{
-            asm!("push rax
-                  mov rax, cr3
-                  mov cr3, rax
-                  pop rax"
-                  ::::"intel","volatile")
-        };
+            self.p4_mut()[511].set(table.p4_frame.clone(), PRESENT | WRITABLE);
 
-        f(self);
+            unsafe{
+                asm!("push rax
+                      mov rax, cr3
+                      mov cr3, rax
+                      pop rax"
+                      ::::"intel","volatile")
+            };
 
-        // Restore original mapping
+            f(self);
 
+            // Restore original mapping
+            p4_table[511].set(backup, PRESENT | WRITABLE);
+            unsafe{
+                asm!("push rax
+                      mov rax, cr3
+                      mov cr3, rax
+                      pop rax"
+                      ::::"intel","volatile")
+            };
+        }
+        temporary_page.unmap(self);
     }
 
 
@@ -137,8 +151,37 @@ impl InactivePageTable {
 
         InactivePageTable { p4_frame: frame }
     }
+}
 
+pub fn remap_kernel<A>(allocator: &mut A, boot_info: &BootInformation) where A: FrameAllocator {
+    let mut temporary_page = TemporaryPage::new(Page {number: 0xcafebabe}, allocator);
+    let mut active_table = unsafe{ ActivePageTable::new() };
+    let mut new_table = {
+        let frame = allocator.allocate_frame().expect("no more frames");
+        InactivePageTable::new(frame, &mut active_table, &mut temporary_page)
+    };
+    active_table.with(&mut new_table, &mut temporary_page, |mapper| {
+        let elf_sections_tag = boot_info.elf_sections_tag().expect("Memory map tag required");
+        for section in elf_sections_tag.sections(){
+            // TODO mapper.identity_map() all sections
+            use self::entry::WRITABLE;
 
+            if !section.is_allocated() {
+                continue;
+            }
 
+            assert!(section.start_address() % PAGE_SIZE == 0, "Sections need to be page aligned.");
 
+            println!("mapping section at addr: {:#x}, size: {:#x}", section.addr, section.size);
+
+            let flags = WRITABLE;
+
+            let start_frame = Frame::containing_address(section.start_address());
+            let end_frame = Frame::containing_address(section.end_address() - 1);
+            for frame in Frame::range_inclusive(start_frame, end_frame){
+                mapper.identity_map(frame, flags, allocator);
+            }
+        }
+    })
+    
 }

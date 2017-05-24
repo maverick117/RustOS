@@ -26,6 +26,7 @@ use mem::*;
 
 pub use isr::interrupt_handler;
 
+
 extern {
     static multiboot_loc: u32;
 }
@@ -83,7 +84,10 @@ pub extern fn rust_start() -> !{
 
     //println!("{:?}",frame_allocator.allocate_frame());
 
-    mem::test_paging(&mut frame_allocator);
+    mem::remap_kernel(&mut frame_allocator, boot_info);
+    println!("It did not crash!");
+
+    loop{};
 
     /*
     for i in 0.. {
