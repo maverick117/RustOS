@@ -3,6 +3,7 @@
 mod entry;
 mod table;
 mod temp_page;
+mod mapper;
 
 use mem::PAGE_SIZE;
 use mem::Frame;
@@ -11,6 +12,7 @@ pub use self::entry::*;
 use mem::FrameAllocator;
 use self::table::{Table, Level4};
 use core::ptr::Unique;
+use mem::paging::temp_page::{TemporaryPage};
 
 const ENTRY_COUNT : usize = 512;
 
@@ -147,6 +149,23 @@ impl ActivePageTable {
         // TODO deallocate tables if empty
         allocator.deallocate_frame(frame);
     }
+
+    pub fn with<F>(&mut self, table: &mut InactivePageTable, f: F) where F: FnOnce(&mut ActivePageTable) {
+        self.p4_mut()[511].set(table.p4_frame.clone(), PRESENT | WRITABLE);
+
+        unsafe{
+            asm!("push rax
+                  mov rax, cr3
+                  mov cr3, rax
+                  pop rax"
+                  ::::"intel","volatile")
+        };
+
+        f(self);
+
+        // Restore original mapping
+
+    }
 }
 
 pub fn test_paging<A>(allocator: &mut A) where A: FrameAllocator {
@@ -173,8 +192,15 @@ pub struct InactivePageTable {
 }
 
 impl InactivePageTable {
-    pub fn new(frame: Frame) -> InactivePageTable {
+    pub fn new(frame: Frame, active_table: &mut ActivePageTable, temporary_page : &mut TemporaryPage) -> InactivePageTable {
         // TODO: nullify and recursively map the frame
+        {
+            let table = temporary_page.map_table_frame(frame.clone(), active_table);
+            table.zero();
+            table[511].set(frame.clone(), PRESENT | WRITABLE);
+        }
+        temporary_page.unmap(active_table);
+
         InactivePageTable { p4_frame: frame }
     }
 

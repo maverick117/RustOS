@@ -5,6 +5,7 @@ TARGET=x86_64-RustOS
 
 all: kernel_obj kernel_ld arch_obj 
 	cd bin; make
+	mkdir -p iso
 	qemu-system-x86_64 -cdrom iso/os.iso -m 64 -d cpu_reset
 
 run: iso/os.iso
